@@ -1,31 +1,14 @@
 # django-resend
 
-A Django package for handling Resend email webhooks with asynchronous event processing.
+A Django package for handling Resend email webhooks with asynchronous event processing. Includes the Resend Python library, so you can send emails and handle webhook events in one package.
 
 ## About
 
-**Important**: This package is designed to handle Resend webhook events, not to send emails. To send emails, you must use the official [Resend Python library](https://github.com/resend/resend-python):
-
-```bash
-pip install resend
-```
-
-```python
-import resend
-
-resend.api_key = "re_your_api_key"
-resend.Emails.send({
-    "from": "onboarding@resend.dev",
-    "to": "delivered@resend.dev",
-    "subject": "Hello World",
-    "html": "<p>Congrats on sending your <strong>first email</strong>!</p>"
-})
-```
-
-This package (`django-resend`) is specifically useful for **handling large amounts of Resend webhook events** efficiently. It stores webhook events in your database with a status field, allowing you to process them asynchronously and avoid webhook timeout issues when dealing with high volumes of events.
+While this package includes the Resend Python library for sending emails, its **main purpose** is to **handle large amounts of Resend webhook events** efficiently. It stores webhook events in your database with a status field, allowing you to process them asynchronously and avoid webhook timeout issues when dealing with high volumes of events. This is particularly useful for applications that need to process many webhook events without blocking the webhook endpoint.
 
 ## Features
 
+- **Email Sending**: Includes Resend Python library for sending emails with a convenient Django wrapper
 - **Webhook Event Storage**: Automatically stores all Resend webhook events in the database
 - **Asynchronous Processing**: Events are stored with a status field for async processing
 - **Status Tracking**: Track event processing status (pending, processing, processed, failed)
@@ -86,6 +69,49 @@ urlpatterns = [
 ```
 
 This will create a webhook endpoint at `/resend/webhook/` that Resend can POST to.
+
+## Sending Emails
+
+This package includes the Resend library and provides a convenient wrapper. You can send emails using either approach:
+
+### Using the Resend library directly:
+
+```python
+import resend
+from django.conf import settings
+
+resend.api_key = settings.RESEND_APIKEY
+resend.Emails.send({
+    "from": "onboarding@resend.dev",
+    "to": "delivered@resend.dev",
+    "subject": "Hello World",
+    "html": "<p>Congrats on sending your <strong>first email</strong>!</p>"
+})
+```
+
+### Using the package wrapper:
+
+```python
+from django_resend.client import ResendClient, send_email
+
+# Using the client class
+client = ResendClient()
+client.send_email(
+    to='user@example.com',
+    subject='Hello',
+    html='<p>Hello World</p>',
+    from_email='sender@example.com'
+)
+
+# Or using the convenience function
+send_email(
+    to='user@example.com',
+    subject='Hello',
+    html='<p>Hello World</p>'
+)
+```
+
+The wrapper automatically uses the `RESEND_APIKEY` setting and provides a Django-friendly interface.
 
 ## Usage
 
